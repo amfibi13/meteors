@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pluja Espacial</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background-color: black;
+    }
+    #score {
+      color: white;
+      font-family: sans-serif;
+      font-size: 20px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Puntuació: 0</div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const playerImg = new Image();
+    playerImg.src = '../../nau espacial joc.jpg';
+    playerImg.onerror = () => console.error("Error carregant ../../nau espacial joc.jpg");
+
+    const meteorImg = new Image();
+    meteorImg.src = '../../meteorit.jpg';
+    meteorImg.onerror = () => console.error("Error carregant ../../meteorit.jpg");
+
+    const player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 60,
+      width: 50,
+      height: 50,
+      speed: 5
+    };
+
+    const keys = {};
+    let meteors = [];
+    let score = 0;
+    let gameOver = false;
+    let spawnTimer = 0;
+
+    document.addEventListener('keydown', (e) => keys[e.key] = true);
+    document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+    function spawnMeteor() {
+      if (meteors.length < 20) {
+        meteors.push({
+          x: Math.random() * (canvas.width - 30),
+          y: -30,
+          width: 30,
+          height: 30,
+          speed: 7 + Math.random() * 4
+        });
+      }
+    }
+
+    function update() {
+      if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+      if (keys['ArrowRight'] && player.x + player.width < canvas.width) player.x += player.speed;
+      if (keys['ArrowUp'] && player.y > 0) player.y -= player.speed;
+      if (keys['ArrowDown'] && player.y + player.height < canvas.height) player.y += player.speed;
+
+      spawnTimer++;
+      if (spawnTimer > 30) {
+        spawnMeteor();
+        spawnTimer = 0;
+      }
+
+      for (let i = meteors.length - 1; i >= 0; i--) {
+        meteors[i].y += meteors[i].speed;
+
+        if (isColliding(player, meteors[i])) {
+          gameOver = true;
+          break;
+        }
+
+        if (meteors[i].y > canvas.height) {
+          meteors.splice(i, 1);
+          score++;
+          document.getElementById("score").innerText = `Puntuació: ${score}`;
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+
+      for (const meteor of meteors) {
+        ctx.drawImage(meteorImg, meteor.x, meteor.y, meteor.width, meteor.height);
+      }
+    }
+
+    function isColliding(a, b) {
+      return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+      );
+    }
+
+    function gameLoop() {
+      if (!gameOver) {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      } else {
+        ctx.fillStyle = "white";
+        ctx.font = "48px sans-serif";
+        const text = "Game Over";
+        const textWidth = ctx.measureText(text).width;
+        ctx.fillText(text, (canvas.width - textWidth) / 2, canvas.height / 2);
+      }
+    }
+
+    playerImg.onload = () => {
+      meteorImg.onload = () => {
+        gameLoop();
+      };
+    };
+  </script>
+</body>
+</html>
