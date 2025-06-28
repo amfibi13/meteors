@@ -22,6 +22,7 @@
       position: absolute;
       top: 10px;
       left: 10px;
+      z-index: 10;
     }
   </style>
 </head>
@@ -33,13 +34,14 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    // Ajusta las rutas a tus imágenes. Lo ideal es que estén en la misma carpeta que el HTML.
     const playerImg = new Image();
-    playerImg.src = '../../nau espacial joc.jpg';
-    playerImg.onerror = () => console.error("Error carregant ../../nau espacial joc.jpg");
+    playerImg.src = 'nau-espacial-joc.jpg';
+    playerImg.onerror = () => console.error("Error carregant nau-espacial-joc.jpg");
 
     const meteorImg = new Image();
-    meteorImg.src = '../../meteorit.jpg';
-    meteorImg.onerror = () => console.error("Error carregant ../../meteorit.jpg");
+    meteorImg.src = 'meteorit.jpg';
+    meteorImg.onerror = () => console.error("Error carregant meteorit.jpg");
 
     const player = {
       x: canvas.width / 2 - 25,
@@ -130,11 +132,14 @@
       }
     }
 
-    playerImg.onload = () => {
-      meteorImg.onload = () => {
-        gameLoop();
-      };
-    };
+    // Asegúrate de que ambas imágenes estén cargadas antes de iniciar el juego
+    let imagesLoaded = 0;
+    function maybeStartGame() {
+      imagesLoaded++;
+      if (imagesLoaded === 2) gameLoop();
+    }
+    playerImg.onload = maybeStartGame;
+    meteorImg.onload = maybeStartGame;
   </script>
 </body>
 </html>
